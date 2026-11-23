@@ -1110,4 +1110,14 @@ function renderHistory(completed) {
 
     addText(div,"strong",tokenLabel(p.token));
 
-    addText(div
+    addText(div, "p",
+    "Completed: " +
+    new Date(p.completedAt || Date.now()).toLocaleString(),
+    "muted"
+);
+
+box.appendChild(div);
+
+});
+
+  }
