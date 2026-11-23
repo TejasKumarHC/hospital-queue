@@ -1,0 +1,1114 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hospital Queue Management System</title>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+
+<!-- Analytics charts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root {
+  --blue: #1769aa;
+  --dark: #17324d;
+  --green: #168451;
+  --red: #c74444;
+  --bg: #f1f5f9;
+  --muted: #64748b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: var(--bg);
+  color: var(--dark);
+}
+
+header {
+  background: linear-gradient(120deg,#124d80,#1976b9);
+  color: white;
+  padding: 22px 16px;
+}
+
+.header-inner {
+  max-width: 1150px;
+  margin: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 23px;
+}
+
+header p {
+  margin: 6px 0 0;
+  opacity: .85;
+  font-size: 13px;
+}
+
+.connection {
+  background: #dff5e8;
+  color: #17643b;
+  text-align: center;
+  padding: 10px;
+  font-size: 13px;
+}
+
+.container {
+  max-width: 1150px;
+  margin: auto;
+  padding: 16px;
+}
+
+h2 {
+  font-size: 19px;
+  margin-top: 0;
+}
+
+h3 {
+  font-size: 16px;
+}
+
+.card {
+  background: white;
+  border-radius: 13px;
+  padding: 18px;
+  margin-bottom: 16px;
+  box-shadow: 0 3px 12px #16324d0d;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  gap: 12px;
+}
+
+.stat {
+  padding: 17px;
+  border-left: 4px solid var(--blue);
+}
+
+.stat h2 {
+  color: var(--blue);
+  font-size: 28px;
+  margin: 10px 0 5px;
+}
+
+.stat small {
+  color: var(--muted);
+}
+
+.stat .symbol {
+  font-size: 23px;
+}
+
+.grid-two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+input, select, button {
+  font: inherit;
+}
+
+input, select {
+  width: 100%;
+  padding: 12px;
+  margin: 6px 0 13px;
+  border: 1px solid #d5dee8;
+  border-radius: 8px;
+  background: white;
+}
+
+label {
+  font-size: 13px;
+  font-weight: bold;
+}
+
+button {
+  padding: 11px 14px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--blue);
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+button:hover {
+  filter: brightness(.94);
+}
+
+.btn-green {
+  background: var(--green);
+}
+
+.btn-gray {
+  background: #64748b;
+}
+
+.btn-red {
+  background: var(--red);
+}
+
+.btn-light {
+  background: #e7f1fa;
+  color: var(--blue);
+}
+
+.full {
+  width: 100%;
+}
+
+.current {
+  text-align: center;
+  background: #e9f6ee;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+.current .token {
+  font-size: 36px;
+  font-weight: bold;
+  color: var(--green);
+}
+
+.patient {
+  border-bottom: 1px solid #e8edf2;
+  padding: 13px 0;
+}
+
+.patient:last-child {
+  border-bottom: 0;
+}
+
+.patient-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.token {
+  color: var(--blue);
+  font-weight: bold;
+  font-size: 17px;
+}
+
+.status {
+  padding: 5px 9px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.waiting {
+  background: #fff0ce;
+  color: #96620b;
+}
+
+.serving {
+  background: #dff5e8;
+  color: #17643b;
+}
+
+.completed {
+  background: #e7ebf0;
+  color: #566273;
+}
+
+.priority {
+  color: #b62f2f;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.patient-actions {
+  display: flex;
+  gap: 7px;
+  margin-top: 9px;
+}
+
+.patient-actions button {
+  font-size: 12px;
+  padding: 8px;
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: 1fr 180px;
+  gap: 10px;
+}
+
+.chart-box {
+  height: 260px;
+  position: relative;
+}
+
+.analysis-value {
+  font-size: 25px;
+  color: var(--blue);
+  font-weight: bold;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.empty {
+  text-align: center;
+  padding: 20px;
+  color: var(--muted);
+}
+
+.toolbar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+footer {
+  text-align: center;
+  padding: 20px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+#message {
+  text-align: center;
+  padding: 10px;
+  color: var(--blue);
+  font-size: 13px;
+}
+
+@media(max-width:700px) {
+  .stats {
+    grid-template-columns: repeat(2,1fr);
+  }
+
+  .grid-two {
+    grid-template-columns: 1fr;
+  }
+
+  .header-inner {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .filters {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="header-inner">
+    <div>
+      <h1>🏥 City Hospital</h1>
+      <p>Advanced Queue Management System</p>
+    </div>
+    <div id="headerStatus">Connecting...</div>
+  </div>
+</header>
+
+<div class="connection" id="connection">
+  Connecting to Firebase...
+</div>
+
+<main class="container">
+
+<!-- DASHBOARD -->
+
+<section class="stats">
+
+  <div class="card stat">
+    <div class="symbol">👥</div>
+    <h2 id="total">0</h2>
+    <small>Total Patients</small>
+  </div>
+
+  <div class="card stat">
+    <div class="symbol">⏳</div>
+    <h2 id="waitingCount">0</h2>
+    <small>Waiting</small>
+  </div>
+
+  <div class="card stat">
+    <div class="symbol">🩺</div>
+    <h2 id="servingCount">0</h2>
+    <small>Serving</small>
+  </div>
+
+  <div class="card stat">
+    <div class="symbol">✅</div>
+    <h2 id="completedCount">0</h2>
+    <small>Completed</small>
+  </div>
+
+</section>
+
+<!-- REGISTRATION AND CURRENT PATIENT -->
+
+<section class="grid-two">
+
+  <div class="card">
+    <h2>➕ Patient Registration</h2>
+
+    <form id="patientForm">
+
+      <label>Patient Name</label>
+      <input id="name" type="text"
+        maxlength="60"
+        placeholder="Enter patient name" required>
+
+      <label>Phone Number (optional)</label>
+      <input id="phone" type="tel"
+        maxlength="20"
+        placeholder="Enter phone number">
+
+      <label>Department</label>
+      <select id="department">
+        <option>General Medicine</option>
+        <option>Dental</option>
+        <option>Cardiology</option>
+        <option>Orthopaedics</option>
+        <option>Paediatrics</option>
+      </select>
+
+      <label>Queue priority (staff demonstration only)</label>
+      <select id="priority">
+        <option value="Normal">Normal</option>
+        <option value="Urgent">Urgent - staff assigned</option>
+      </select>
+
+      <button id="registerButton"
+        class="full" type="submit" disabled>
+        REGISTER PATIENT
+      </button>
+
+    </form>
+  </div>
+
+  <div class="card">
+    <h2>📢 Currently Serving</h2>
+
+    <div class="current" id="current">
+      <div class="muted">No patient being served</div>
+    </div>
+
+    <br>
+
+    <button id="nextButton"
+      class="btn-green full"
+      onclick="callNext()" disabled>
+      CALL NEXT PATIENT
+    </button>
+
+    <p class="muted">
+      Only one patient can be served at a time.
+    </p>
+  </div>
+
+</section>
+
+<!-- WAITING LIST -->
+
+<section class="card">
+
+  <h2>📋 Patient Queue</h2>
+
+  <div class="filters">
+
+    <input id="search"
+      placeholder="Search patient or token..."
+      oninput="render()">
+
+    <select id="filterDepartment"
+      onchange="render()">
+      <option value="All">All Departments</option>
+      <option>General Medicine</option>
+      <option>Dental</option>
+      <option>Cardiology</option>
+      <option>Orthopaedics</option>
+      <option>Paediatrics</option>
+    </select>
+
+  </div>
+
+  <div id="waitingList"></div>
+
+</section>
+
+<!-- COMPLETED HISTORY -->
+
+<section class="card">
+
+  <h2>📚 Completed Patient History</h2>
+
+  <div id="history"></div>
+
+</section>
+
+<!-- ANALYTICS -->
+
+<section class="card">
+
+  <h2>📊 Hospital Analytics</h2>
+
+  <div class="grid-two">
+
+    <div>
+      <h3>Average Waiting Time</h3>
+      <div class="analysis-value" id="averageWait">
+        0 min
+      </div>
+      <p class="muted">
+        Average time from registration to being called,
+        for completed waiting-time records.
+      </p>
+    </div>
+
+    <div>
+      <h3>Today's Registrations</h3>
+      <div class="analysis-value" id="todayCount">
+        0
+      </div>
+      <p class="muted">
+        Patients registered today.
+      </p>
+    </div>
+
+  </div>
+
+  <div class="grid-two">
+
+    <div>
+      <h3>Department Analysis</h3>
+      <div class="chart-box">
+        <canvas id="departmentChart"></canvas>
+      </div>
+    </div>
+
+    <div>
+      <h3>Patient Status Analysis</h3>
+      <div class="chart-box">
+        <canvas id="statusChart"></canvas>
+      </div>
+    </div>
+
+  </div>
+
+</section>
+
+<!-- REPORTS -->
+
+<section class="card">
+
+  <h2>📁 Reports and Management</h2>
+
+  <div class="toolbar">
+
+    <button onclick="exportCSV()">
+      DOWNLOAD CSV REPORT
+    </button>
+
+    <button class="btn-gray"
+      onclick="resetDemo()">
+      RESET DEMO QUEUE
+    </button>
+
+  </div>
+
+  <p class="muted">
+    Reset permanently clears all patient records in this
+    demonstration database. Use only with fictional data.
+  </p>
+
+</section>
+
+<div id="message"></div>
+
+</main>
+
+<footer>
+  Hospital Queue Management System |
+  College Project | HTML CSS JavaScript Firebase
+</footer>
+
+<script>
+
+// =====================================
+// 1. FIREBASE CONFIGURATION
+// =====================================
+
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "YOUR_DATABASE_URL",
+  projectId: "YOUR_PROJECT_ID",
+  appId: "YOUR_APP_ID"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.database();
+const hospitalRef = db.ref("hospital");
+
+let patients = {};
+let currentServingKey = null;
+let ready = false;
+let connected = false;
+
+let departmentChart = null;
+let statusChart = null;
+
+// =====================================
+// 2. MESSAGE
+// =====================================
+
+function message(text) {
+  document.getElementById("message").textContent =
+    text;
+}
+
+// =====================================
+// 3. AUTHENTICATION
+// =====================================
+
+auth.signInAnonymously()
+.then(() => {
+
+  ready = true;
+
+  document.getElementById("registerButton").disabled =
+    !connected;
+
+  document.getElementById("nextButton").disabled =
+    !connected;
+
+})
+.catch(error => {
+  message("Authentication failed: " + error.message);
+});
+
+// =====================================
+// 4. CONNECTION
+// =====================================
+
+db.ref(".info/connected").on("value", snapshot => {
+
+  connected = snapshot.val() === true;
+
+  document.getElementById("connection").textContent =
+    connected
+      ? "🟢 ONLINE - Live Database Connected"
+      : "🔴 OFFLINE - Reconnecting...";
+
+  document.getElementById("headerStatus").textContent =
+    connected ? "Online" : "Offline";
+
+  document.getElementById("registerButton").disabled =
+    !ready || !connected;
+
+  document.getElementById("nextButton").disabled =
+    !ready || !connected;
+
+});
+
+// =====================================
+// 5. LIVE DATABASE
+// =====================================
+
+hospitalRef.on("value", snapshot => {
+
+  const data = snapshot.val() || {};
+
+  patients = data.patients || {};
+  currentServingKey = data.currentServingKey || null;
+
+  render();
+
+}, error => {
+
+  message("Database error: " + error.message);
+
+});
+
+// =====================================
+// 6. PATIENT REGISTRATION
+// =====================================
+
+document.getElementById("patientForm")
+.addEventListener("submit", async function(e) {
+
+  e.preventDefault();
+
+  if (!ready || !connected) {
+    message("Database not connected.");
+    return;
+  }
+
+  const name =
+    document.getElementById("name").value.trim();
+
+  const phone =
+    document.getElementById("phone").value.trim();
+
+  const department =
+    document.getElementById("department").value;
+
+  const priority =
+    document.getElementById("priority").value;
+
+  if (!name) return;
+
+  const key = hospitalRef.child("patients").push().key;
+
+  const button =
+    document.getElementById("registerButton");
+
+  button.disabled = true;
+
+  try {
+
+    const result = await hospitalRef.transaction(data => {
+
+      data = data || {};
+      data.patients = data.patients || {};
+
+      const token = Number(data.nextToken || 1);
+
+      data.patients[key] = {
+        name,
+        phone,
+        department,
+        priority,
+        token,
+        status: "Waiting",
+        createdAt: Date.now()
+      };
+
+      data.nextToken = token + 1;
+
+      return data;
+
+    }, undefined, false);
+
+    if (!result.committed) {
+      throw new Error("Registration not committed.");
+    }
+
+    const patient = result.snapshot.val()
+      .patients[key];
+
+    message(
+      "Patient registered! Token: Q-" +
+      String(patient.token).padStart(3,"0")
+    );
+
+    this.reset();
+
+  } catch(error) {
+
+    message("Registration error: " + error.message);
+
+  } finally {
+
+    button.disabled = !ready || !connected;
+
+  }
+
+});
+
+// =====================================
+// 7. QUEUE PROCESSING
+// =====================================
+
+async function callNext() {
+
+  if (!ready || !connected) return;
+
+  try {
+
+    const result = await hospitalRef.transaction(data => {
+
+      if (!data) return;
+
+      data.patients = data.patients || {};
+
+      if (data.currentServingKey) {
+
+        const current =
+          data.patients[data.currentServingKey];
+
+        if (current && current.status === "Serving") {
+          return;
+        }
+
+        data.currentServingKey = null;
+      }
+
+      const waiting = Object.entries(data.patients)
+        .filter(([key,p]) => p.status === "Waiting")
+        .sort((a,b) => {
+
+          const priorityA =
+            a[1].priority === "Urgent" ? 0 : 1;
+
+          const priorityB =
+            b[1].priority === "Urgent" ? 0 : 1;
+
+          return priorityA - priorityB ||
+            a[1].createdAt - b[1].createdAt ||
+            a[1].token - b[1].token;
+
+        });
+
+      if (!waiting.length) return;
+
+      const [key, patient] = waiting[0];
+
+      patient.status = "Serving";
+      patient.calledAt = Date.now();
+
+      data.patients[key] = patient;
+      data.currentServingKey = key;
+
+      return data;
+
+    }, undefined, false);
+
+    if (!result.committed) {
+      message(
+        "No waiting patient or another patient is being served."
+      );
+    } else {
+      message("Next patient called successfully.");
+    }
+
+  } catch(error) {
+
+    message("Queue error: " + error.message);
+
+  }
+
+}
+
+// =====================================
+// 8. COMPLETE PATIENT
+// =====================================
+
+async function completePatient(key) {
+
+  if (!ready || !connected) return;
+
+  try {
+
+    const result = await hospitalRef.transaction(data => {
+
+      if (!data || !data.patients ||
+          !data.patients[key]) return;
+
+      const p = data.patients[key];
+
+      if (p.status !== "Serving" ||
+          data.currentServingKey !== key) return;
+
+      p.status = "Completed";
+      p.completedAt = Date.now();
+
+      data.patients[key] = p;
+      data.currentServingKey = null;
+
+      return data;
+
+    }, undefined, false);
+
+    message(
+      result.committed
+        ? "Patient completed successfully."
+        : "Unable to complete patient."
+    );
+
+  } catch(error) {
+
+    message(error.message);
+
+  }
+
+}
+
+// =====================================
+// 9. TEXT SAFETY
+// =====================================
+
+function addText(parent, tag, value, cls) {
+
+  const element = document.createElement(tag);
+
+  element.textContent = value ?? "";
+
+  if (cls) element.className = cls;
+
+  parent.appendChild(element);
+
+  return element;
+}
+
+function makeButton(label, cls, callback) {
+
+  const button = document.createElement("button");
+
+  button.textContent = label;
+  button.className = cls;
+  button.disabled = !connected;
+
+  button.addEventListener("click", callback);
+
+  return button;
+
+}
+
+function tokenLabel(number) {
+
+  return "Q-" + String(number).padStart(3,"0");
+
+}
+
+function minutes(ms) {
+
+  if (!Number.isFinite(ms) || ms < 0) return "—";
+
+  return Math.floor(ms / 60000) + " min";
+
+}
+
+// =====================================
+// 10. RENDER DASHBOARD
+// =====================================
+
+function render() {
+
+  const all = Object.entries(patients)
+    .sort((a,b) => a[1].token - b[1].token);
+
+  const waiting = all.filter(
+    ([k,p]) => p.status === "Waiting"
+  );
+
+  const serving = all.filter(
+    ([k,p]) => p.status === "Serving"
+  );
+
+  const completed = all.filter(
+    ([k,p]) => p.status === "Completed"
+  );
+
+  document.getElementById("total").textContent =
+    all.length;
+
+  document.getElementById("waitingCount").textContent =
+    waiting.length;
+
+  document.getElementById("servingCount").textContent =
+    serving.length;
+
+  document.getElementById("completedCount").textContent =
+    completed.length;
+
+  renderCurrent(serving);
+  renderWaiting(waiting);
+  renderHistory(completed);
+  renderAnalytics(all);
+
+}
+
+// =====================================
+// 11. CURRENT PATIENT
+// =====================================
+
+function renderCurrent(serving) {
+
+  const box = document.getElementById("current");
+
+  box.replaceChildren();
+
+  const current = serving.find(
+    ([key]) => key === currentServingKey
+  );
+
+  if (!current) {
+
+    addText(box,"div",
+      "No patient is being served.",
+      "muted");
+
+    return;
+
+  }
+
+  const [key,p] = current;
+
+  addText(box,"div",tokenLabel(p.token),"token");
+
+  addText(box,"h3",p.name);
+
+  addText(box,"p",p.department,"muted");
+
+  addText(box,"span","NOW SERVING","status serving");
+
+  box.appendChild(document.createElement("br"));
+
+  box.appendChild(
+    makeButton("MARK COMPLETED","btn-green full",
+      () => completePatient(key))
+  );
+
+}
+
+// =====================================
+// 12. WAITING LIST + SEARCH
+// =====================================
+
+function renderWaiting(waiting) {
+
+  const box = document.getElementById("waitingList");
+
+  box.replaceChildren();
+
+  const search =
+    document.getElementById("search").value
+      .trim().toLowerCase();
+
+  const department =
+    document.getElementById("filterDepartment").value;
+
+  const filtered = waiting.filter(([key,p]) => {
+
+    const matchesSearch =
+      p.name.toLowerCase().includes(search) ||
+      tokenLabel(p.token).toLowerCase().includes(search);
+
+    const matchesDepartment =
+      department === "All" ||
+      p.department === department;
+
+    return matchesSearch && matchesDepartment;
+
+  }).sort((a,b) => {
+
+    const pa = a[1].priority === "Urgent" ? 0 : 1;
+    const pb = b[1].priority === "Urgent" ? 0 : 1;
+
+    return pa - pb ||
+      a[1].createdAt - b[1].createdAt;
+
+  });
+
+  if (!filtered.length) {
+
+    addText(box,"p","No matching waiting patients.","empty");
+
+    return;
+
+  }
+
+  filtered.forEach(([key,p]) => {
+
+    const div = document.createElement("div");
+    div.className = "patient";
+
+    const top = document.createElement("div");
+    top.className = "patient-top";
+
+    addText(top,"strong",tokenLabel(p.token),"token");
+
+    addText(top,"span","WAITING","status waiting");
+
+    div.appendChild(top);
+
+    addText(div,"h3",p.name);
+    addText(div,"p",p.department,"muted");
+
+    if (p.priority === "Urgent") {
+      addText(div,"span",
+        "STAFF-ASSIGNED PRIORITY",
+        "priority");
+    }
+
+    addText(div,"p",
+      "Registered: " +
+      new Date(p.createdAt).toLocaleString(),
+      "muted");
+
+    addText(div,"p",
+      "Waiting: " +
+      minutes(Date.now() - p.createdAt),
+      "muted");
+
+    box.appendChild(div);
+
+  });
+
+}
+
+// =====================================
+// 13. COMPLETED HISTORY
+// =====================================
+
+function renderHistory(completed) {
+
+  const box = document.getElementById("history");
+
+  box.replaceChildren();
+
+  const recent = completed
+    .sort((a,b) =>
+      (b[1].completedAt || 0) -
+      (a[1].completedAt || 0)
+    ).slice(0,50);
+
+  if (!recent.length) {
+
+    addText(box,"p",
+      "No completed patients yet.",
+      "empty");
+
+    return;
+
+  }
+
+  recent.forEach(([key,p]) => {
+
+    const div = document.createElement("div");
+    div.className = "patient";
+
+    addText(div,"strong",tokenLabel(p.token));
+
+    addText(div
