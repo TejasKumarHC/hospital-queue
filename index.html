@@ -608,6 +608,8 @@ auth.signInAnonymously()
 
   ready = true;
 
+  message("Authentication successful!");
+
   document.getElementById("registerButton").disabled =
     !connected;
 
@@ -616,7 +618,15 @@ auth.signInAnonymously()
 
 })
 .catch(error => {
-  message("Authentication failed: " + error.message);
+
+  ready = false;
+
+  message("LOGIN ERROR: " + error.code +
+          " - " + error.message);
+
+  document.getElementById("connection").textContent =
+    "Authentication failed";
+
 });
 
 // =====================================
@@ -629,8 +639,8 @@ db.ref(".info/connected").on("value", snapshot => {
 
   document.getElementById("connection").textContent =
     connected
-      ? "🟢 ONLINE - Live Database Connected"
-      : "🔴 OFFLINE - Reconnecting...";
+      ? "ONLINE - Firebase Connected"
+      : "OFFLINE - Checking connection...";
 
   document.getElementById("headerStatus").textContent =
     connected ? "Online" : "Offline";
@@ -641,27 +651,14 @@ db.ref(".info/connected").on("value", snapshot => {
   document.getElementById("nextButton").disabled =
     !ready || !connected;
 
-});
-
-// =====================================
-// 5. LIVE DATABASE
-// =====================================
-
-hospitalRef.on("value", snapshot => {
-
-  const data = snapshot.val() || {};
-
-  patients = data.patients || {};
-  currentServingKey = data.currentServingKey || null;
-
-  render();
+  console.log("Firebase connection:", connected);
 
 }, error => {
 
-  message("Database error: " + error.message);
+  message("Connection error: " + error.message);
+  console.error(error);
 
 });
-
 // =====================================
 // 6. PATIENT REGISTRATION
 // =====================================
